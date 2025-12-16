@@ -18,26 +18,41 @@ function loadShader(gl, type, source) {
 
 function initShaderProgram(gl) {
     const vsSource = `
-        attribute vec4 aVertexPosition;
-        attribute vec4 aVertexColor;
-
-        uniform mat4 uModelViewMatrix;
-        uniform mat4 uProjectionMatrix;
-
-        varying lowp vec4 vColor;
+        attribute vec2 aVertexPosition;
+        
+        varying vec2 v_uv;
 
         void main() {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-            vColor = aVertexColor;
+            v_uv = aVertexPosition * 0.5 + 0.5;
+            gl_Position = vec4(aVertexPosition, 0.0, 1.0);
         }
     `;
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
 
     const fsSource = `
-        varying lowp vec4 vColor;
+        precision highp float;
+        varying vec2 v_uv;
 
         void main() {
-            gl_FragColor = vColor;
+            // possible parameters
+            float borderRadius = 0.5;
+
+            // fragment to border coords
+            vec2 p = v_uv * 2.0 - 1.0;  // scale to [-1,1]
+            vec2 p2 = (abs(p) - (1.0 - borderRadius)) * (1.0 / borderRadius);  // translate and scale absolute p such that everything between borders is negative and on borders is in [0,1] (independent x and y coords)
+            vec2 p3 = max(p2, 0.0);  // clip negatives to 0
+            vec2 p4 = sign(p) * p3;  // reintroduce sign
+
+            float borderDistance = dot(p4, p4);  // how far along the width of the border is the fragment
+
+            float borderAngle = degrees(acos(dot(p4, vec2(1.0, 0.0)) / length(p4)));  // angle in which direction the outer edge of the border is facing
+            borderAngle = borderAngle / 180.0;  // scale to [0,1]
+            borderAngle = borderAngle * sign(p[1]);  // add y sign of fragment position to differentiate all angle in full rotation
+            borderAngle = borderAngle * 0.5 + 0.5;  // bring back to [0,1] for viz
+
+            //gl_FragColor = vec4(borderDistance, borderDistance, borderDistance, 1.0);
+            gl_FragColor = vec4(borderAngle, borderAngle, borderAngle, 1.0);
+            //gl_FragColor = vec4(p, 0.0, 1.0);
         }
     `;
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
