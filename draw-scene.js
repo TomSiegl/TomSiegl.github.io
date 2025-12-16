@@ -42,10 +42,7 @@ function setColorAttribute(gl, buffers, programInfo) {
 
 function drawScene(gl, programInfo, buffers, squareRotation) {
     gl.clearColor(0.0, 0.0, 0.0, 0.5); // Clear to black
-    gl.clearDepth(1.0); // Clear everything
-    gl.enable(gl.DEPTH_TEST); // Enable depth testing
-    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     const fieldOfView = (45 * Math.PI) / 180; // in radians
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -61,12 +58,13 @@ function drawScene(gl, programInfo, buffers, squareRotation) {
         [-0.0, 0.0, -6.0],
     ); // amount to translate
 
-    mat4.rotate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to rotate
-        squareRotation, // amount to rotate in radians
-        [0, 0, 1], // axis to rotate around
-    );
+    // spin camera around look vector
+    //mat4.rotate(
+    //    modelViewMatrix, // destination matrix
+    //    modelViewMatrix, // matrix to rotate
+    //    squareRotation, // amount to rotate in radians
+    //    [0, 0, 1], // axis to rotate around
+    //);
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
