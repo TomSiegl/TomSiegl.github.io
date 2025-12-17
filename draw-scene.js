@@ -20,72 +20,18 @@ function setPositionAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 }
 
-// Tell WebGL how to pull out the colors from the color buffer
-// into the vertexColor attribute.
-function setColorAttribute(gl, buffers, programInfo) {
-    const numComponents = 4;
-    const type = gl.FLOAT;
-    const normalize = false;
-    const stride = 0;
-    const offset = 0;
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-    gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexColor,
-        numComponents,
-        type,
-        normalize,
-        stride,
-        offset,
-    );
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
-}
-
-function drawScene(gl, programInfo, buffers, squareRotation) {
+function drawScene(gl, programInfo, buffers, mouse, aspect_ratio) {
     gl.clearColor(0.0, 0.0, 0.0, 0.5); // Clear to black
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const fieldOfView = (45 * Math.PI) / 180; // in radians
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    const zNear = 0.1;
-    const zFar = 100.0;
-    const projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-
-    const modelViewMatrix = mat4.create();
-    mat4.translate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -6.0],
-    ); // amount to translate
-
-    // spin camera around look vector
-    //mat4.rotate(
-    //    modelViewMatrix, // destination matrix
-    //    modelViewMatrix, // matrix to rotate
-    //    squareRotation, // amount to rotate in radians
-    //    [0, 0, 1], // axis to rotate around
-    //);
-
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute.
+    // Tell WebGL how to pull out the positions from the position buffer into the vertexPosition attribute.
     setPositionAttribute(gl, buffers, programInfo);
-
-    setColorAttribute(gl, buffers, programInfo);
 
     // Tell WebGL to use our program when drawing
     gl.useProgram(programInfo.program);
 
-    // Set the shader uniforms
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix,
-    );
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix,
-    );
+    gl.uniform2f(programInfo.uniformLocations.uMouseLoc, mouse.x, mouse.y);
+    gl.uniform1f(programInfo.uniformLocations.uAspectRatio, aspect_ratio);
 
     {
         const offset = 0;
