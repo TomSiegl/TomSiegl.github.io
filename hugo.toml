@@ -1,0 +1,7 @@
+baseURL = "https://tomsiegl.github.io/"
+locale = "en-us"
+title = "Tom Siegl"
+disableKinds = ["taxonomy", "term"]
+
+[params]
+  accent = "#1c4ed8"

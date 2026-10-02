@@ -1,0 +1,28 @@
+{{ define "main" }}
+<header class="page-head">
+  <h1>Papers</h1>
+  <p class="papers-legend"><span class="papers-legend__star">★</span> = selected papers</p>
+</header>
+
+{{ $papers := .Pages.ByParam "year" }}
+{{ $papers := $papers.Reverse }}
+{{ $years := slice }}
+{{ range $papers }}
+  {{ $years = $years | append .Params.year }}
+{{ end }}
+{{ $years := $years | uniq }}
+
+<section class="papers-by-year">
+  {{ range $years }}
+  {{ $year := . }}
+  <div class="papers-year-group">
+    <h2 class="papers-year-group__year">{{ $year }}</h2>
+    <div class="paper-rows">
+      {{ range where $papers "Params.year" $year }}
+      {{ partial "paper-row.html" (dict "page" . "showYear" false "showStar" true) }}
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+</section>
+{{ end }}

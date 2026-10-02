@@ -1,0 +1,4 @@
+{
+  "_schema": "One entry per rejected publication-venue update (ticket 15). 'slug' is the content/papers/<slug>.md file the update PR touched; 'paper_id' is the Semantic Scholar paperId that triggered it. The preprint-scan skips any future update for a slug that matches an entry here, so a rejected venue match isn't re-proposed every week. 'rejected_at' is the ISO date the update PR was closed without merging.",
+  "exclusions": []
+}

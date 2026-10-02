@@ -1,0 +1,17 @@
+<nav class="site-nav">
+  <a class="site-nav__name" href="{{ "/" | relURL }}">Tom Siegl</a>
+  <details class="site-nav__toggle">
+    <summary aria-controls="site-nav-links">
+      <span class="sr-only">Menu</span>
+      <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true">
+        <line x1="0" y1="1" x2="22" y2="1" stroke="currentColor" stroke-width="2"/>
+        <line x1="0" y1="8" x2="22" y2="8" stroke="currentColor" stroke-width="2"/>
+        <line x1="0" y1="15" x2="22" y2="15" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </summary>
+  </details>
+  <div class="site-nav__links" id="site-nav-links">
+    <a href="{{ "/" | relURL }}"{{ if .IsHome }} aria-current="page"{{ end }}>Home</a>
+    <a href="{{ "/papers/" | relURL }}"{{ if eq .Section "papers" }} aria-current="page"{{ end }}>Papers</a>
+  </div>
+</nav>

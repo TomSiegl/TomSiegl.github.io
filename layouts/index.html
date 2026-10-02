@@ -1,0 +1,40 @@
+{{ define "main" }}
+{{ $selected := where (where .Site.RegularPages "Section" "papers") "Params.selected" true }}
+{{ $selected := $selected.ByParam "year" }}
+{{ $selected := $selected.Reverse }}
+
+<header class="hero">
+  <div class="hero__text">
+    <p class="hero__eyebrow">Hi, I'm</p>
+    <h1 class="hero__name">Tom Siegl</h1>
+    <p class="hero__bio">a PhD student at the <span class="accent-underline">University of Rostock</span> and a member of BckrLab at Marburg University.</p>
+    <p class="hero__research">My research focuses on the <strong>robustness</strong> of machine learning models — especially <strong>intersectional evaluation</strong> and <strong>geometric robustness</strong>.</p>
+  </div>
+  <div class="hero__figure">
+    <div class="portrait">
+      <img class="portrait__bg" src="{{ "images/germany-map.svg" | relURL }}" alt="" aria-hidden="true">
+      <img class="portrait__img" src="{{ "images/profile.jpg" | relURL }}" alt="Portrait of Tom Siegl">
+    </div>
+    <div class="affiliations">
+      <span class="affiliations__label">Affiliations</span>
+      <div class="affiliations__row">
+        <img src="{{ "images/uni-rostock-logo.png" | relURL }}" alt="Logo of the University of Rostock">
+        <span class="affiliations__slash">/</span>
+        <img src="{{ "images/uni-marburg-logo.png" | relURL }}" alt="Logo of Universität Marburg">
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="selected-papers">
+  <div class="selected-papers__head">
+    <h2>Selected papers</h2>
+    <a href="{{ "/papers/" | relURL }}">All papers →</a>
+  </div>
+  <div class="paper-rows">
+    {{ range $selected }}
+    {{ partial "paper-row.html" (dict "page" . "showYear" true) }}
+    {{ end }}
+  </div>
+</section>
+{{ end }}

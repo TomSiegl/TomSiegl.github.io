@@ -1,0 +1,43 @@
+MIT License
+
+Copyright (c) 2026 Tom Siegl
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+The MIT License above applies to the site's code only: Hugo templates,
+layouts, CSS, JavaScript, and the automation scripts under `.github/`.
+
+It does not apply to:
+
+- Tom Siegl's original content — bio/page text and the profile photo
+  (`static/images/profile.jpg`). All rights reserved; this content is not
+  licensed for reuse.
+- Paper and publication content, which belongs to its respective authors and
+  publishers and is only ever linked to via each paper's `external_url`, never
+  reproduced on this site.
+- The Rostock/Marburg marks and the ORCID/GitHub/LinkedIn icons, which are
+  third-party trademarks/brand assets used under each organization's own
+  published usage rules.
+- The lineart Germany background map, which is public domain (`PD-self`,
+  Wikimedia Commons).
+- The IBM Plex Sans font (`static/fonts/ibm-plex-sans-variable.woff2`), which
+  is © IBM Corp. and licensed under the SIL Open Font License 1.1, included
+  at `static/fonts/OFL.txt`.

@@ -1,0 +1,4 @@
+{
+  "_schema": "One entry per rejected paper candidate. 'title' is the candidate's title at rejection time (matched case/whitespace-insensitively); 'paper_id' is its Semantic Scholar paperId. The papers-detection workflow skips any future candidate whose title or paper_id matches an entry here. 'rejected_at' is the ISO date the candidate's PR was closed without merging.",
+  "exclusions": []
+}

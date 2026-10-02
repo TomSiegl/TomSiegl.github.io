@@ -1,0 +1,5 @@
+{{ $page := .page }}
+<div class="paper-row">
+  <a class="paper-row__title" href="{{ $page.Params.external_url }}" target="_blank" rel="noopener">{{ if and .showStar $page.Params.selected }}<span class="paper-row__star">★</span> {{ end }}{{ $page.Params.title }}</a>
+  <span class="paper-row__meta">{{ $page.Params.venue }}{{ if .showYear }} · {{ $page.Params.year }}{{ end }}</span>
+</div>
