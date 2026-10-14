@@ -2,11 +2,13 @@
 """PR-closed-without-merge entry point for update PRs (ticket 15).
 
 Triggered when a paper-update PR is closed without merging. Reads the
-paper's slug from the file the PR touched and its Semantic Scholar paperId
-from the PR body marker, then hands both to the shared rejection-recording
-scaffolding (papers_lib.record_rejection, ticket 25), which records them to
-the update-exclusion file and commits the update straight to main, so the
-preprint scan doesn't re-propose the same rejected venue match every week.
+paper's slug from the file the PR touched and its proposed venue and
+Semantic Scholar paperId from the PR body markers, then hands all three to
+the shared rejection-recording scaffolding (papers_lib.record_rejection,
+ticket 25), which records them to the update-exclusion file and commits the
+update straight to main. The exclusion is scoped to slug + venue, so the
+preprint scan doesn't re-propose the same rejected venue every week, but
+still proposes a later, different venue for the same paper.
 """
 
 import json
@@ -22,6 +24,7 @@ from papers_lib import (
     UPDATE_EXCLUSIONS_SCHEMA_NOTE,
     configure_bot_identity,
     extract_paper_id,
+    extract_venue,
     is_update_excluded,
     record_rejection,
     run_git as run,
@@ -49,6 +52,7 @@ def main():
 
     slug = Path(paper_path).stem
     paper_id = extract_paper_id(pr_body)
+    venue = extract_venue(pr_body)
 
     configure_bot_identity()
 
@@ -57,10 +61,11 @@ def main():
         schema_note=UPDATE_EXCLUSIONS_SCHEMA_NOTE,
         new_entry={
             "slug": slug,
+            "venue": venue,
             "paper_id": paper_id,
             "rejected_at": date.today().isoformat(),
         },
-        already_excluded=lambda exclusions: is_update_excluded(slug, exclusions),
+        already_excluded=lambda exclusions: is_update_excluded(slug, venue, exclusions),
         commit_message=f"Record publication update rejection: {slug}",
     )
 

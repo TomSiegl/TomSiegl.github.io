@@ -11,8 +11,11 @@ rejection time), "paper_id" (Semantic Scholar paperId) and "rejected_at"
 (ISO date). A candidate is skipped if its title or paperId matches an entry.
 
 Update-exclusion file schema (.github/data/paper-update-exclusions.json,
-ticket 15): same shape, but keyed by "slug" (the content/papers/<slug>.md
-file a rejected publication-venue update touched) instead of title/paperId.
+ticket 15): same shape, but each entry has "slug" (the content/papers/<slug>.md
+file a rejected publication-venue update touched), "venue" (the proposed
+venue that was rejected) and "paper_id" instead of title/paperId. A future
+update is skipped only when both slug and venue match an entry, so a later,
+different venue for the same paper is still proposed.
 """
 
 import json
@@ -42,6 +45,7 @@ PREPRINT_VENUE = "arXiv preprint"
 # must not be mistaken for a real publication venue in find_publication_update.
 PREPRINT_VENUE_ALIASES = {"arxiv preprint", "arxiv.org", "arxiv"}
 PAPER_ID_RE = re.compile(r"<!--\s*semantic-scholar-paper-id:\s*(\S*?)\s*-->")
+VENUE_RE = re.compile(r"<!--\s*semantic-scholar-venue:\s*(.*?)\s*-->")
 
 MAX_PUSH_ATTEMPTS = 5
 MAX_FETCH_ATTEMPTS = 5
@@ -69,10 +73,12 @@ EXCLUSIONS_SCHEMA_NOTE = (
 
 UPDATE_EXCLUSIONS_SCHEMA_NOTE = (
     "One entry per rejected publication-venue update (ticket 15). 'slug' is "
-    "the content/papers/<slug>.md file the update PR touched; 'paper_id' is "
-    "the Semantic Scholar paperId that triggered it. The preprint-scan skips "
-    "any future update for a slug that matches an entry here, so a rejected "
-    "venue match isn't re-proposed every week. 'rejected_at' is the ISO date "
+    "the content/papers/<slug>.md file the update PR touched; 'venue' is the "
+    "proposed venue that was rejected; 'paper_id' is the Semantic Scholar "
+    "paperId that triggered it. The preprint-scan skips any future update "
+    "whose slug and venue both match an entry here, so a rejected venue "
+    "match isn't re-proposed every week, while a later, different venue for "
+    "the same paper still is. 'rejected_at' is the ISO date "
     "the update PR was closed without merging."
 )
 
@@ -134,6 +140,11 @@ def configure_bot_identity():
 
 def extract_paper_id(pr_body):
     match = PAPER_ID_RE.search(pr_body or "")
+    return match.group(1) if match else ""
+
+
+def extract_venue(pr_body):
+    match = VENUE_RE.search(pr_body or "")
     return match.group(1) if match else ""
 
 
@@ -329,7 +340,7 @@ def is_excluded(candidate, exclusions, title_norm=None):
     matched two ways (title or paperId) because a candidate's title at
     rejection time may differ slightly from how it resurfaces later, while
     an update rejection is keyed by the stable content/papers/<slug>.md path
-    the update PR touched, so a single slug match is all it needs.
+    the update PR touched plus the specific venue that was rejected.
     """
     title_norm = title_norm if title_norm is not None else normalize_title(candidate.get("title"))
     paper_id = candidate.get("paperId")
@@ -341,9 +352,17 @@ def is_excluded(candidate, exclusions, title_norm=None):
     return False
 
 
-def is_update_excluded(slug, exclusions):
-    """Paper-update exclusion match: slug only. See is_excluded."""
-    return any(entry.get("slug") == slug for entry in exclusions)
+def is_update_excluded(slug, venue, exclusions):
+    """Paper-update exclusion match: slug and venue (see is_excluded).
+
+    Scoped to the specific venue that was rejected, not the whole paper, so
+    a later, different venue reported for the same paper is still proposed
+    as a new update instead of being silently skipped forever.
+    """
+    return any(
+        entry.get("slug") == slug and entry.get("venue") == venue
+        for entry in exclusions
+    )
 
 
 def record_rejection(path, schema_note, new_entry, already_excluded, commit_message):

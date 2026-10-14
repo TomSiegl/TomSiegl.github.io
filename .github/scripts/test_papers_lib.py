@@ -252,6 +252,18 @@ class ExtractPaperIdTests(unittest.TestCase):
         self.assertEqual(lib.extract_paper_id(None), "")
 
 
+class ExtractVenueTests(unittest.TestCase):
+    def test_extracts_venue_from_marker(self):
+        body = "Some text\n\n<!-- semantic-scholar-venue: ECAI 2026 -->"
+        self.assertEqual(lib.extract_venue(body), "ECAI 2026")
+
+    def test_missing_marker_returns_empty_string(self):
+        self.assertEqual(lib.extract_venue("no marker here"), "")
+
+    def test_none_body_returns_empty_string(self):
+        self.assertEqual(lib.extract_venue(None), "")
+
+
 class DedupeCandidatesTests(unittest.TestCase):
     def test_drops_duplicate_paper_id(self):
         candidates = [
@@ -503,13 +515,28 @@ class UpdateExclusionsFileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "update-exclusions.json"
             lib.save_exclusions(
-                [{"slug": "a-paper", "paper_id": "p1", "rejected_at": "2026-09-27"}],
+                [
+                    {
+                        "slug": "a-paper",
+                        "venue": "ECAI 2026",
+                        "paper_id": "p1",
+                        "rejected_at": "2026-09-27",
+                    }
+                ],
                 path,
                 lib.UPDATE_EXCLUSIONS_SCHEMA_NOTE,
             )
             loaded = lib.load_exclusions(path)
             self.assertEqual(
-                loaded, [{"slug": "a-paper", "paper_id": "p1", "rejected_at": "2026-09-27"}]
+                loaded,
+                [
+                    {
+                        "slug": "a-paper",
+                        "venue": "ECAI 2026",
+                        "paper_id": "p1",
+                        "rejected_at": "2026-09-27",
+                    }
+                ],
             )
             data = json.loads(path.read_text())
             self.assertEqual(data.get("_schema"), lib.UPDATE_EXCLUSIONS_SCHEMA_NOTE)
@@ -520,13 +547,24 @@ class UpdateExclusionsFileTests(unittest.TestCase):
         self.assertIsInstance(data.get("exclusions"), list)
         for entry in data["exclusions"]:
             self.assertIn("slug", entry)
+            self.assertIn("venue", entry)
             self.assertIn("paper_id", entry)
             self.assertIn("rejected_at", entry)
 
-    def test_is_update_excluded_matches_by_slug(self):
-        exclusions = [{"slug": "a-paper", "paper_id": "p1", "rejected_at": "2026-09-27"}]
-        self.assertTrue(lib.is_update_excluded("a-paper", exclusions))
-        self.assertFalse(lib.is_update_excluded("other-paper", exclusions))
+    def test_is_update_excluded_matches_by_slug_and_venue(self):
+        exclusions = [
+            {"slug": "a-paper", "venue": "ECAI 2026", "paper_id": "p1", "rejected_at": "2026-09-27"}
+        ]
+        self.assertTrue(lib.is_update_excluded("a-paper", "ECAI 2026", exclusions))
+        self.assertFalse(lib.is_update_excluded("other-paper", "ECAI 2026", exclusions))
+
+    def test_is_update_excluded_allows_a_different_later_venue(self):
+        # A rejected venue match must not block a later, different venue for
+        # the same paper from being proposed.
+        exclusions = [
+            {"slug": "a-paper", "venue": "arXiv.org", "paper_id": "p1", "rejected_at": "2026-09-27"}
+        ]
+        self.assertFalse(lib.is_update_excluded("a-paper", "ECAI 2026", exclusions))
 
 
 class RecordRejectionTests(unittest.TestCase):

@@ -50,7 +50,8 @@ def open_update_pr(path, fields, candidate):
         f"**DOI:** {fields['doi'] or dash}\n\n"
         "Merge to update the site. Close without merging to leave it as a "
         "preprint for now.\n\n"
-        f"<!-- semantic-scholar-paper-id: {candidate.get('paperId', '')} -->"
+        f"<!-- semantic-scholar-paper-id: {candidate.get('paperId', '')} -->\n"
+        f"<!-- semantic-scholar-venue: {fields['venue']} -->"
     )
     run_git(
         "gh",
@@ -86,10 +87,10 @@ def main():
         slug = Path(path).stem
         if f"{PAPER_UPDATE_BRANCH_PREFIX}{slug}" in open_branches:
             continue
-        if is_update_excluded(slug, update_exclusions):
-            continue
         candidate = find_publication_update(fields, candidates)
         if candidate is None:
+            continue
+        if is_update_excluded(slug, candidate.get("venue"), update_exclusions):
             continue
         updates.append((path, fields, candidate))
 
