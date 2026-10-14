@@ -411,6 +411,21 @@ class FindPublicationUpdateTests(unittest.TestCase):
         candidates = [{"title": "Unrelated", "venue": "ECAI 2026", "externalIds": {}}]
         self.assertIsNone(lib.find_publication_update(paper, candidates))
 
+    def test_ignores_arxiv_org_venue_alias(self):
+        # Regression guard for PR #1: Semantic Scholar sometimes reports an
+        # arXiv paper's venue as "arXiv.org" (with an arXiv DOI like
+        # "10.48550/arXiv...."), not this repo's own PREPRINT_VENUE spelling
+        # -- that's still a preprint, not a publication update.
+        paper = {"title": "My Paper", "venue": lib.PREPRINT_VENUE, "arxiv_id": "1234.5"}
+        candidates = [
+            {
+                "title": "My Paper",
+                "venue": "arXiv.org",
+                "externalIds": {"ArXiv": "1234.5", "DOI": "10.48550/arXiv.1234.5"},
+            }
+        ]
+        self.assertIsNone(lib.find_publication_update(paper, candidates))
+
 
 class ApplyPublicationUpdateTests(unittest.TestCase):
     def test_updates_venue_doi_and_url_preserving_other_fields(self):

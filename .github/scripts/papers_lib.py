@@ -37,6 +37,10 @@ CANDIDATE_PR_TITLE_PREFIX = "New paper candidate: "
 UPDATE_PR_TITLE_PREFIX = "Update publication venue: "
 PAPER_UPDATE_BRANCH_PREFIX = "paper-update/"
 PREPRINT_VENUE = "arXiv preprint"
+# Other venue strings Semantic Scholar uses for an arXiv listing (seen for a
+# paper whose DOI was still an arXiv DOI like "10.48550/arXiv...."); these
+# must not be mistaken for a real publication venue in find_publication_update.
+PREPRINT_VENUE_ALIASES = {"arxiv preprint", "arxiv.org", "arxiv"}
 PAPER_ID_RE = re.compile(r"<!--\s*semantic-scholar-paper-id:\s*(\S*?)\s*-->")
 
 MAX_PUSH_ATTEMPTS = 5
@@ -469,7 +473,9 @@ def find_publication_update(paper, candidates):
     already-published detection. Only a candidate with a real, different
     venue counts as a hit: Semantic Scholar sometimes relists the arXiv
     preprint itself as a second record (the ticket 03/09 duplicate-paperId
-    pattern), which must not be mistaken for a publication update.
+    pattern), or reports its venue as "arXiv.org" rather than this repo's own
+    PREPRINT_VENUE spelling -- neither of which is a real publication venue
+    and must not be mistaken for a publication update.
     """
     title_norm = normalize_title(paper.get("title"))
     arxiv_id = paper.get("arxiv_id")
@@ -480,7 +486,7 @@ def find_publication_update(paper, candidates):
         if not ((arxiv_id and candidate_arxiv_id == arxiv_id) or title_matches):
             continue
         venue = candidate.get("venue") or ""
-        if venue and venue != PREPRINT_VENUE:
+        if venue and venue.strip().lower() not in PREPRINT_VENUE_ALIASES:
             return candidate
     return None
 
