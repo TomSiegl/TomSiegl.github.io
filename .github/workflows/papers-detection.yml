@@ -28,9 +28,11 @@ jobs:
       - name: Find and propose new paper candidates
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
         run: python3 .github/scripts/find_new_papers.py
 
       - name: Check preprints for publication updates
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
         run: python3 .github/scripts/check_preprint_updates.py

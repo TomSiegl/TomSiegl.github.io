@@ -16,8 +16,11 @@ file a rejected publication-venue update touched) instead of title/paperId.
 """
 
 import json
+import os
 import re
 import subprocess
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -37,6 +40,8 @@ PREPRINT_VENUE = "arXiv preprint"
 PAPER_ID_RE = re.compile(r"<!--\s*semantic-scholar-paper-id:\s*(\S*?)\s*-->")
 
 MAX_PUSH_ATTEMPTS = 5
+MAX_FETCH_ATTEMPTS = 5
+FETCH_RETRY_BACKOFF_SECONDS = 5
 
 FIELD_ORDER = [
     "title",
@@ -69,13 +74,42 @@ UPDATE_EXCLUSIONS_SCHEMA_NOTE = (
 
 
 def fetch_candidates():
-    """Fetch Tom's papers from the Semantic Scholar author API."""
-    req = urllib.request.Request(
-        API_URL, headers={"User-Agent": "TomSiegl.github.io papers-detection workflow"}
-    )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        payload = json.load(resp)
-    return payload.get("data", [])
+    """Fetch Tom's papers from the Semantic Scholar author API.
+
+    Uses the SEMANTIC_SCHOLAR_API_KEY env var for a dedicated per-key rate
+    limit when set, instead of the much more congested shared unauthenticated
+    pool; falls back to an unauthenticated request if it's unset.
+
+    Retries on HTTP 429: a single workflow run itself calls this twice, once
+    here and once from check_preprint_updates.py, and even a dedicated key's
+    rate limit can still be hit during review-granted throttling. Honors a
+    Retry-After header when the API sends one, otherwise backs off with
+    increasing delays.
+    """
+    headers = {"User-Agent": "TomSiegl.github.io papers-detection workflow"}
+    api_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
+    if api_key:
+        headers["x-api-key"] = api_key
+    req = urllib.request.Request(API_URL, headers=headers)
+    for attempt in range(1, MAX_FETCH_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                payload = json.load(resp)
+            return payload.get("data", [])
+        except urllib.error.HTTPError as exc:
+            if exc.code != 429 or attempt == MAX_FETCH_ATTEMPTS:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            delay = (
+                float(retry_after)
+                if retry_after and retry_after.isdigit()
+                else FETCH_RETRY_BACKOFF_SECONDS * attempt
+            )
+            print(
+                f"Semantic Scholar API rate-limited (429); retrying in "
+                f"{delay:.0f}s (attempt {attempt}/{MAX_FETCH_ATTEMPTS})."
+            )
+            time.sleep(delay)
 
 
 def run_git(*args, capture=False):
